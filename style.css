@@ -124,6 +124,12 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; }
   margin-top: 10px;
 }
 
+.offset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 button {
   font: inherit;
   padding: 6px 12px;

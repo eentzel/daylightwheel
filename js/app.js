@@ -9,8 +9,8 @@ const LOCATION = {
   lon: -105.11,
   timeZone: 'America/Denver',
   refs: [
-    { label: 'MST', offset: -420 },
-    { label: 'MDT', offset: -360 },
+    { label: 'MST', name: 'Standard time', offset: -420 },
+    { label: 'MDT', name: 'Daylight Saving time', offset: -360 },
   ],
 };
 
@@ -45,6 +45,9 @@ function fmtClock(min) {
   const m = ((Math.round(min) % 1440) + 1440) % 1440;
   return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 }
+
+// Intl truncates seconds; round instead so it agrees with fmtClock.
+const roundToMinute = (date) => new Date(Math.round(date / 60000) * 60000);
 
 function fmtDuration(min) {
   const m = Math.round(min);
@@ -96,7 +99,7 @@ function update() {
   $('readout-body').replaceChildren(...EVENTS.map(([key, label]) => {
     const tr = document.createElement('tr');
     const cells = events[key]
-      ? [label, fmtClock(minutes[key] + offset), legal.format(events[key])]
+      ? [label, fmtClock(minutes[key] + offset), legal.format(roundToMinute(events[key]))]
       : [label, '—', '—'];
     for (const text of cells) {
       const td = document.createElement('td');
@@ -136,5 +139,15 @@ $('reset').addEventListener('click', () => {
   state.offset = solarNoonOffset(state);
   update();
 });
+$('reset').after(...state.loc.refs.map((ref) => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = `Snap to ${ref.name} (${ref.label})`;
+  button.addEventListener('click', () => {
+    state.offset = ref.offset;
+    update();
+  });
+  return button;
+}));
 initSlider();
 update();
