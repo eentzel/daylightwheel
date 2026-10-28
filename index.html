@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daylight Wheel</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Daylight Wheel</h1>
+      <p class="location">Location: <span id="location"></span></p>
+    </header>
+
+    <section class="wheel-wrap">
+      <svg id="wheel" aria-label="Sun and clock wheel"></svg>
+      <p class="hint">Drag the clock face to turn it. Hold Shift to snap to 15 minutes.</p>
+    </section>
+
+    <section class="controls">
+      <label for="day">Day of year: <strong id="day-label"></strong></label>
+      <input id="day" type="range" min="1" max="365" step="1" list="day-marks">
+      <datalist id="day-marks"></datalist>
+
+      <div class="offset-row">
+        <span>Clock: <strong id="offset"></strong></span>
+        <button id="reset" type="button">Align noon with the sun</button>
+      </div>
+    </section>
+
+    <section class="readout">
+      <table>
+        <thead>
+          <tr><th>Event</th><th>Wheel clock</th><th>Local legal time</th></tr>
+        </thead>
+        <tbody id="readout-body"></tbody>
+      </table>
+      <dl>
+        <dt>Day length</dt><dd id="day-length"></dd>
+        <dt>Solar noon</dt><dd id="noon-drift"></dd>
+      </dl>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Solar tests</title>
+</head>
+<body>
+  <pre id="out">running…</pre>
+  <script type="module">
+    import { run } from './solar.test.mjs';
+    const results = run();
+    const failed = results.filter((r) => !r.pass);
+    document.getElementById('out').textContent =
+      results.map((r) => `${r.pass ? 'PASS' : 'FAIL'} ${r.name}: ${r.detail}`).join('\n') +
+      `\n\n${results.length - failed.length}/${results.length} passed` +
+      (failed.length ? '\nRESULT: FAIL' : '\nRESULT: OK');
+  </script>
+</body>
+</html>
