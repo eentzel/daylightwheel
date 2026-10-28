@@ -110,6 +110,7 @@ footer {
   text-align: center;
   margin: 4px 0 8px;
 }
+footer p { margin: 2px 0; }
 footer a { color: inherit; }
 
 .wheel-wrap { margin: 8px 0 16px; }
