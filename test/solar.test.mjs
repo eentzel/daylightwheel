@@ -1,7 +1,7 @@
 // Checks solarEvents() for ZIP 80005 against the U.S. Naval Observatory
 // (aa.usno.navy.mil/api/rstt/oneday, coords=39.85,-105.11). USNO rounds to the
 // minute, so we allow ±1 min. Open test/index.html via a local server to run.
-import { solarEvents, dayOfYearToDate } from '../js/solar.js';
+import { solarEvents } from '../js/solar.js';
 
 const LAT = 39.85;
 const LON = -105.11;
@@ -19,8 +19,7 @@ const TOLERANCE_MIN = 1;
 export function run() {
   const results = [];
   for (const [iso, tz, ...expected] of CASES) {
-    const [y, m, d] = iso.split('-').map(Number);
-    const dayStart = dayOfYearToDate(y, Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 86400000));
+    const dayStart = new Date(`${iso}T00:00Z`);
     const events = solarEvents(dayStart, LAT, LON);
     KEYS.forEach((key, i) => {
       const local = (events[key] - dayStart) / 60000 + tz * 60;

@@ -16,7 +16,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root {
     --bg: #15171c;
     --fg: #e6e6e6;
     --muted: #9aa0aa;
@@ -31,22 +31,6 @@
     --ref: #6fa3f0;
     --marker: #f0f0f0;
   }
-}
-
-:root[data-theme="dark"] {
-  --bg: #15171c;
-  --fg: #e6e6e6;
-  --muted: #9aa0aa;
-  --panel: #1e2128;
-  --border: #2f333c;
-  --night: #0b0e1a;
-  --twilight: #5b4f8f;
-  --day: #e0b43a;
-  --clock-face: #262a33;
-  --clock-ink: #e6e6e6;
-  --accent: #f07a4f;
-  --ref: #6fa3f0;
-  --marker: #f0f0f0;
 }
 
 * { box-sizing: border-box; }
@@ -82,9 +66,15 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; }
 .corner-toggle:hover, .corner-toggle:focus-visible { opacity: 1; }
 .corner-toggle[data-mode="12"] .h12,
 .corner-toggle[data-mode="24"] .h24 { color: var(--fg); font-weight: 600; }
-.location, .hint { color: var(--muted); margin: 0; }
+.hint {
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
 
 .location {
+  color: var(--muted);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -112,7 +102,6 @@ footer {
   margin: 4px 0 8px;
 }
 footer a { color: inherit; }
-.hint { text-align: center; font-size: 0.85rem; }
 
 .wheel-wrap { margin: 8px 0 16px; }
 

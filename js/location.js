@@ -70,10 +70,10 @@ function abbreviationAt(timeZone, date) {
 // Standard and (if observed) daylight saving offsets for the year, as
 // [{ label: 'MST', name: 'Standard time', offset: -420 }, ...].
 export function tzRefs(timeZone, year) {
-  const samples = [new Date(Date.UTC(year, 0, 15, 12)), new Date(Date.UTC(year, 6, 15, 12))]
+  const [standard, daylight] = [0, 6] // mid-January and mid-July
+    .map((month) => new Date(Date.UTC(year, month, 15, 12)))
     .map((date) => ({ offset: offsetAt(timeZone, date), label: abbreviationAt(timeZone, date) }))
     .sort((a, b) => a.offset - b.offset);
-  const [standard, daylight] = samples;
   if (standard.offset === daylight.offset) {
     return [{ ...standard, name: 'Standard time' }];
   }

@@ -20,16 +20,16 @@ const EVENTS = [
   ['dusk', 'Dusk'],
 ];
 
-const year = new Date().getFullYear();
+const YEAR = new Date().getFullYear();
 
 // Offset (minutes from UTC) that puts clock noon at the selected day's solar noon.
-function solarNoonOffset({ loc, year, doy }) {
-  const dayStart = dayOfYearToDate(year, doy);
+function solarNoonOffset({ loc, doy }) {
+  const dayStart = dayOfYearToDate(YEAR, doy);
   const noon = solarEvents(dayStart, loc.lat, loc.lon).solarNoon;
   return Math.round(720 - minutesUTC(noon, dayStart));
 }
 
-const withRefs = (loc) => ({ ...loc, refs: tzRefs(loc.timeZone, year) });
+const withRefs = (loc) => ({ ...loc, refs: tzRefs(loc.timeZone, YEAR) });
 
 // Preferences are remembered per browser when storage is available.
 const HOUR12_KEY = 'daylight.hour12';
@@ -53,8 +53,7 @@ function writePref(key, value) {
 
 const state = {
   loc: withRefs(DEFAULT_LOCATION),
-  year,
-  doy: Math.min(dayOfYear(new Date()), daysInYear(year)),
+  doy: Math.min(dayOfYear(new Date()), daysInYear(YEAR)),
   hour12: readPref(HOUR12_KEY) !== 'false', // 12-hour (AM/PM) is the default
 };
 state.offset = solarNoonOffset(state);
@@ -106,11 +105,12 @@ const wheel = createWheel($('wheel'), {
 
 function update() {
   const { loc, offset } = state;
-  const dayStart = dayOfYearToDate(state.year, state.doy);
+  const dayStart = dayOfYearToDate(YEAR, state.doy);
   const events = solarEvents(dayStart, loc.lat, loc.lon);
   const minutes = Object.fromEntries(Object.entries(events)
     .map(([k, d]) => [k, d && minutesUTC(d, dayStart)]));
   const polar = polarConditions(dayStart, loc.lat, loc.lon);
+  const clockText = offsetText(offset, loc.refs);
 
   wheel.render({
     T0: minutes.solarNoon,
@@ -118,13 +118,13 @@ function update() {
     polar,
     offset,
     refs: loc.refs,
-    offsetText: offsetText(offset, loc.refs),
+    offsetText: clockText,
     hour12: state.hour12,
   });
 
   $('hour-format').dataset.mode = state.hour12 ? '12' : '24';
   $('day-label').textContent = dateFmt.format(dayStart);
-  $('offset').textContent = offsetText(offset, loc.refs);
+  $('offset').textContent = clockText;
 
   const legal = legalFmt(loc.timeZone, state.hour12);
   $('readout-body').replaceChildren(...EVENTS.map(([key, label]) => {
@@ -151,13 +151,12 @@ function update() {
 
 function initSlider() {
   const slider = $('day');
-  const n = daysInYear(state.year);
-  slider.max = n;
+  slider.max = daysInYear(YEAR);
   slider.value = state.doy;
   const marks = [[2, 20], [5, 21], [8, 22], [11, 21]]; // approx. equinoxes and solstices
   $('day-marks').replaceChildren(...marks.map(([month, day]) => {
     const opt = document.createElement('option');
-    opt.value = dayOfYear(new Date(state.year, month, day));
+    opt.value = dayOfYear(new Date(YEAR, month, day));
     return opt;
   }));
   slider.addEventListener('input', () => {

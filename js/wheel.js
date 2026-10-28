@@ -27,10 +27,15 @@ const MARKERS = [
   { key: 'dusk', label: 'Dusk', far: true },
 ];
 
-function el(name, attrs = {}, parent) {
-  const node = document.createElementNS(NS, name);
+function setAttrs(node, attrs) {
   for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
-  if (parent) parent.appendChild(node);
+}
+
+function el(name, attrs, parent, text) {
+  const node = document.createElementNS(NS, name);
+  setAttrs(node, attrs);
+  if (text != null) node.textContent = text;
+  parent.appendChild(node);
   return node;
 }
 
@@ -39,13 +44,13 @@ function polar(r, deg) {
   return [r * Math.sin(a), -r * Math.cos(a)];
 }
 
-// Clockwise annulus segment from angle a1 to a2 (degrees).
 // Full annulus; the inner circle winds the other way to leave a hole.
 function ringPath(r1, r2) {
   return `M0 ${-r2} A${r2} ${r2} 0 1 1 0 ${r2} A${r2} ${r2} 0 1 1 0 ${-r2} Z ` +
     `M0 ${-r1} A${r1} ${r1} 0 1 0 0 ${r1} A${r1} ${r1} 0 1 0 0 ${-r1} Z`;
 }
 
+// Clockwise annulus segment from angle a1 to a2 (degrees).
 function annulusPath(r1, r2, a1, a2) {
   const span = ((a2 - a1) % 360 + 360) % 360;
   const large = span > 180 ? 1 : 0;
@@ -58,11 +63,11 @@ function annulusPath(r1, r2, a1, a2) {
 }
 
 // Offsets are kept within one day, in [-720, 720) minutes.
-export function wrapOffset(offset) {
+function wrapOffset(offset) {
   return ((offset + 720) % 1440 + 1440) % 1440 - 720;
 }
 
-export function snapOffset(raw, { coarse, refs }) {
+function snapOffset(raw, { coarse, refs }) {
   raw = wrapOffset(raw);
   if (coarse) return wrapOffset(Math.round(raw / 15) * 15);
   for (const ref of refs) {
@@ -101,10 +106,8 @@ export function createWheel(svg, { onOffsetChange }) {
   // In 12-hour mode the left half of the dial (midnight -> noon) is AM.
   const halfLabels = ['AM', 'PM'].map((text, i) => {
     const [x, y] = polar(R.numeral - 40, i === 0 ? -90 : 90);
-    const t = el('text', { x, y, class: 'half-label',
-      'text-anchor': 'middle', 'dominant-baseline': 'central' }, clock);
-    t.textContent = text;
-    return t;
+    return el('text', { x, y, class: 'half-label',
+      'text-anchor': 'middle', 'dominant-baseline': 'central' }, clock, text);
   });
   el('path', { d: `M0 ${-R.numeral + 14} l-6 10 h12 z`, class: 'noon-pointer' }, clock);
   el('circle', { r: 3, class: 'hub' }, clock);
@@ -118,7 +121,7 @@ export function createWheel(svg, { onOffsetChange }) {
       ...m,
       g,
       line: el('line', {}, g),
-      text: Object.assign(el('text', { 'dominant-baseline': 'central' }, g), { textContent: m.label }),
+      text: el('text', { 'dominant-baseline': 'central' }, g, m.label),
     };
   });
 
@@ -155,28 +158,27 @@ export function createWheel(svg, { onOffsetChange }) {
       const deg = toAngle(t);
       const [x1, y1] = polar(R.ringOuter + 4, deg);
       const [x2, y2] = polar(R.clock - 16, deg);
-      Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => m.line.setAttribute(k, v));
-      const [tx, ty] = polar(m.far ? R.labelFar : R.label, deg);
+      setAttrs(m.line, { x1, y1, x2, y2 });
+      const [x, y] = polar(m.far ? R.labelFar : R.label, deg);
       const s = Math.sin(deg * Math.PI / 180);
-      m.text.setAttribute('x', tx);
-      m.text.setAttribute('y', ty);
-      m.text.setAttribute('text-anchor', Math.abs(s) < 0.2 ? 'middle' : s > 0 ? 'start' : 'end');
+      setAttrs(m.text, { x, y, 'text-anchor': Math.abs(s) < 0.2 ? 'middle' : s > 0 ? 'start' : 'end' });
     }
 
     refLayer.replaceChildren();
     for (const ref of refs) {
       const g = el('g', { transform: `rotate(${clockAngle(ref.offset)})`, class: 'ref' }, refLayer);
       el('path', { d: `M0 ${-R.clock - 1} l-5 -8 h10 z` }, g);
-      const t = el('text', { x: 0, y: -R.ringInner - 18, 'text-anchor': 'middle' }, g);
-      t.textContent = ref.label;
+      el('text', { x: 0, y: -R.ringInner - 18, 'text-anchor': 'middle' }, g, ref.label);
     }
 
     numerals.forEach((t, h) => { t.textContent = model.hour12 ? h % 12 || 12 : h; });
     halfLabels.forEach((t) => { t.style.display = model.hour12 ? '' : 'none'; });
 
-    clock.setAttribute('transform', `rotate(${clockAngle(offset)})`);
-    clock.setAttribute('aria-valuenow', offset);
-    clock.setAttribute('aria-valuetext', model.offsetText);
+    setAttrs(clock, {
+      transform: `rotate(${clockAngle(offset)})`,
+      'aria-valuenow': offset,
+      'aria-valuetext': model.offsetText,
+    });
   }
 
   // Dragging: track the cumulative unwrapped rotation since pointerdown.
