@@ -22,8 +22,8 @@
     --muted: #9aa0aa;
     --panel: #1e2128;
     --border: #2f333c;
-    --night: #0b0e1a;
-    --twilight: #5b4f8f;
+    --night: #2c3866;
+    --twilight: #7465b0;
     --day: #e0b43a;
     --clock-face: #262a33;
     --clock-ink: #e6e6e6;
@@ -138,7 +138,16 @@ footer a { color: inherit; }
 
 #wheel .refs { pointer-events: none; }
 #wheel .ref path { fill: var(--ref); }
-#wheel .ref text { fill: var(--ref); font-size: 10px; font-weight: 600; }
+#wheel .ref text {
+  fill: var(--ref);
+  font-size: 10px;
+  font-weight: 600;
+  /* Halo keeps the label readable over day, twilight or night. */
+  stroke: var(--clock-face);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
 
 .controls, .readout {
   background: var(--panel);
