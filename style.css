@@ -95,6 +95,15 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; }
 #place { color: var(--fg); }
 .zip-status { color: var(--accent); font-size: 0.85rem; }
 
+.intro { margin: 12px 0 0; }
+
+.about {
+  margin: 4px 0 16px;
+  line-height: 1.55;
+}
+.about h2 { font-size: 1.1rem; margin: 20px 0 8px; }
+.about p { margin: 0 0 12px; }
+
 footer {
   color: var(--muted);
   font-size: 0.8rem;

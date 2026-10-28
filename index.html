@@ -27,6 +27,12 @@
       </button>
     </header>
 
+    <p class="intro">
+      Solar noon, the moment the sun is highest in the sky, is set by physics. The clock
+      on the wall is a human choice. Turn the clock face to see how different choices
+      line up with the sun through the year.
+    </p>
+
     <section class="wheel-wrap">
       <svg id="wheel" aria-label="Sun and clock wheel"></svg>
       <p class="hint">Drag the clock face to turn it. Hold Shift to snap to 15 minutes.</p>
@@ -56,6 +62,38 @@
         <dt>Day length</dt><dd id="day-length"></dd>
         <dt>Solar noon</dt><dd id="noon-drift"></dd>
       </dl>
+    </section>
+
+    <section class="about">
+      <h2>What you're looking at</h2>
+      <p>
+        <strong>The outer ring is the sun.</strong> One trip around the wheel is 24 hours,
+        and solar noon is always at the top. Yellow is daylight, purple is twilight (the
+        sun less than 6° below the horizon), and navy is night. Move the day slider to
+        watch the days lengthen and shorten through the year.
+      </p>
+      <p>
+        <strong>The inner dial is a clock.</strong> How it is set is just a choice of offset
+        from UTC, the world's reference time. Drag it to any setting you like.
+        <em>Align noon with the sun</em> makes clock noon match the selected day's solar
+        noon. The <em>Standard</em> and <em>Daylight Saving</em> buttons set it to the
+        legal time where you are.
+      </p>
+      <p>
+        <strong>Why the clock drifts.</strong> Align the clock with the sun, then move the
+        day slider: the clock creeps away from the top by up to about a quarter of an hour,
+        then comes back. Because Earth's axis is tilted and its orbit is an ellipse, solar
+        noon arrives a little earlier or later than average at different times of year
+        (the <em>equation of time</em>). A clock that ticks at a steady rate can't follow
+        the sun exactly.
+      </p>
+      <p>
+        <strong>Time zones and Daylight Saving time.</strong> Standard time is shared
+        across a whole time zone, so for most places it already sits minutes, or even an
+        hour or more, away from the sun. Daylight Saving time moves the clock another hour,
+        shifting daylight from the morning to the evening. Try comparing sunrise and sunset
+        in December and June under each setting, and see which you would choose.
+      </p>
     </section>
 
     <footer>
