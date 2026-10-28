@@ -13,8 +13,11 @@
       <h1>Daylight Wheel</h1>
       <div class="location">
         <label for="zip">ZIP</label>
+        <!-- Not an address form field: opt out of browser and password-manager autofill
+             (1Password, LastPass, Bitwarden, Dashlane). -->
         <input id="zip" type="text" inputmode="numeric" maxlength="5"
-          autocomplete="postal-code" spellcheck="false">
+          autocomplete="off" spellcheck="false"
+          data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">
         <span id="place"></span>
         <span id="zip-status" class="zip-status" role="status"></span>
       </div>
