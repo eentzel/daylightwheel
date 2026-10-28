@@ -24,15 +24,19 @@ const EVENTS = [
 
 const year = new Date().getFullYear();
 
-// Offset (minutes from UTC) that puts clock noon at local mean solar noon.
-const meanSolarOffset = (lon) => Math.round(lon * 4);
+// Offset (minutes from UTC) that puts clock noon at the selected day's solar noon.
+function solarNoonOffset({ loc, year, doy }) {
+  const dayStart = dayOfYearToDate(year, doy);
+  const noon = solarEvents(dayStart, loc.lat, loc.lon).solarNoon;
+  return Math.round(720 - minutesUTC(noon, dayStart));
+}
 
 const state = {
   loc: LOCATION,
   year,
   doy: Math.min(dayOfYear(new Date()), daysInYear(year)),
-  offset: meanSolarOffset(LOCATION.lon),
 };
+state.offset = solarNoonOffset(state);
 
 const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, '0');
@@ -78,7 +82,7 @@ function update() {
     .map(([k, d]) => [k, d && minutesUTC(d, dayStart)]));
 
   wheel.render({
-    T0: 720 - 4 * loc.lon,
+    T0: minutes.solarNoon,
     events: minutes,
     offset,
     refs: loc.refs,
@@ -129,7 +133,7 @@ function initSlider() {
 
 $('location').textContent = `${state.loc.name} (${state.loc.zip})`;
 $('reset').addEventListener('click', () => {
-  state.offset = meanSolarOffset(state.loc.lon);
+  state.offset = solarNoonOffset(state);
   update();
 });
 initSlider();

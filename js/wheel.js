@@ -1,9 +1,10 @@
 // The sun/clock wheel. One turn = 24 h, angles clockwise from the top.
 //
-// The frame is absolute time: angle(t) = (t_UTC - T0) / 4, where T0 is local
-// mean solar noon in UTC minutes. The outer ring (sun) is drawn in that frame;
-// the inner ring (clock) is rotated so that clock time c sits over the UTC
-// instant c - offset.
+// The frame is the sun: angle(t) = (t_UTC - T0) / 4, where T0 is the day's
+// solar noon in UTC minutes, so solar noon is always at the top. The outer
+// ring (sun) is drawn in that frame; the inner ring (clock) is rotated so that
+// clock time c sits over the UTC instant c - offset. With a fixed offset, the
+// clock therefore drifts a few degrees through the year (equation of time).
 
 const NS = 'http://www.w3.org/2000/svg';
 
