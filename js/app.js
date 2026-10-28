@@ -38,12 +38,23 @@ const state = {
 };
 state.offset = solarNoonOffset(state);
 
+// 12-hour (AM/PM) is the default; the choice is remembered per browser.
+const HOUR12_KEY = 'daylight.hour12';
+try {
+  state.hour12 = localStorage.getItem(HOUR12_KEY) !== 'false';
+} catch {
+  state.hour12 = true;
+}
+
 const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, '0');
 
-function fmtClock(min) {
+function fmtClock(min, hour12) {
   const m = ((Math.round(min) % 1440) + 1440) % 1440;
-  return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  const h = Math.floor(m / 60);
+  return hour12
+    ? `${h % 12 || 12}:${pad(m % 60)} ${h < 12 ? 'AM' : 'PM'}`
+    : `${pad(h)}:${pad(m % 60)}`;
 }
 
 // Intl truncates seconds; round instead so it agrees with fmtClock.
@@ -65,8 +76,11 @@ function offsetText(offset, refs) {
   return ref ? `${fmtOffset(offset)} (= ${ref.label})` : fmtOffset(offset);
 }
 
-const legalFmt = (timeZone) => new Intl.DateTimeFormat('en-US', {
-  timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short',
+const legalFmt = (timeZone, hour12) => new Intl.DateTimeFormat('en-US', {
+  timeZone,
+  timeZoneName: 'short',
+  minute: '2-digit',
+  ...(hour12 ? { hour: 'numeric', hour12: true } : { hour: '2-digit', hourCycle: 'h23' }),
 });
 const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
@@ -90,16 +104,18 @@ function update() {
     offset,
     refs: loc.refs,
     offsetText: offsetText(offset, loc.refs),
+    hour12: state.hour12,
   });
 
+  $('hour-format').dataset.mode = state.hour12 ? '12' : '24';
   $('day-label').textContent = dateFmt.format(dayStart);
   $('offset').textContent = offsetText(offset, loc.refs);
 
-  const legal = legalFmt(loc.timeZone);
+  const legal = legalFmt(loc.timeZone, state.hour12);
   $('readout-body').replaceChildren(...EVENTS.map(([key, label]) => {
     const tr = document.createElement('tr');
     const cells = events[key]
-      ? [label, fmtClock(minutes[key] + offset), legal.format(roundToMinute(events[key]))]
+      ? [label, fmtClock(minutes[key] + offset, state.hour12), legal.format(roundToMinute(events[key]))]
       : [label, '—', '—'];
     for (const text of cells) {
       const td = document.createElement('td');
@@ -149,5 +165,14 @@ $('reset').after(...state.loc.refs.map((ref) => {
   });
   return button;
 }));
+$('hour-format').addEventListener('click', () => {
+  state.hour12 = !state.hour12;
+  try {
+    localStorage.setItem(HOUR12_KEY, state.hour12);
+  } catch {
+    // Storage unavailable (private mode etc.); the choice just won't persist.
+  }
+  update();
+});
 initSlider();
 update();

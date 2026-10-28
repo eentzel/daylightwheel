@@ -86,12 +86,20 @@ export function createWheel(svg, { onOffsetChange }) {
     const [x2, y2] = polar(R.clock - len, deg);
     el('line', { x1, y1, x2, y2, class: m % 60 === 0 ? 'tick hour' : 'tick' }, clock);
   }
+  const numerals = [];
   for (let h = 0; h < 24; h++) {
     const [x, y] = polar(R.numeral, (h * 60 - 720) / 4);
-    const t = el('text', { x, y, class: h === 12 ? 'numeral noon' : 'numeral',
-      'text-anchor': 'middle', 'dominant-baseline': 'central' }, clock);
-    t.textContent = h;
+    numerals.push(el('text', { x, y, class: h === 12 ? 'numeral noon' : 'numeral',
+      'text-anchor': 'middle', 'dominant-baseline': 'central' }, clock));
   }
+  // In 12-hour mode the left half of the dial (midnight -> noon) is AM.
+  const halfLabels = ['AM', 'PM'].map((text, i) => {
+    const [x, y] = polar(R.numeral - 40, i === 0 ? -90 : 90);
+    const t = el('text', { x, y, class: 'half-label',
+      'text-anchor': 'middle', 'dominant-baseline': 'central' }, clock);
+    t.textContent = text;
+    return t;
+  });
   el('path', { d: `M0 ${-R.numeral + 14} l-6 10 h12 z`, class: 'noon-pointer' }, clock);
   el('circle', { r: 3, class: 'hub' }, clock);
 
@@ -151,6 +159,9 @@ export function createWheel(svg, { onOffsetChange }) {
       const t = el('text', { x: 0, y: -R.ringInner - 18, 'text-anchor': 'middle' }, g);
       t.textContent = ref.label;
     }
+
+    numerals.forEach((t, h) => { t.textContent = model.hour12 ? h % 12 || 12 : h; });
+    halfLabels.forEach((t) => { t.style.display = model.hour12 ? '' : 'none'; });
 
     clock.setAttribute('transform', `rotate(${clockAngle(offset)})`);
     clock.setAttribute('aria-valuenow', offset);

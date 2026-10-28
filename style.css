@@ -64,7 +64,24 @@ main {
   padding: 16px;
 }
 
+header { position: relative; }
 h1 { font-size: 1.4rem; margin: 0 0 4px; }
+
+.corner-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.corner-toggle:hover, .corner-toggle:focus-visible { opacity: 1; }
+.corner-toggle[data-mode="12"] .h12,
+.corner-toggle[data-mode="24"] .h24 { color: var(--fg); font-weight: 600; }
 .location, .hint { color: var(--muted); margin: 0; }
 .hint { text-align: center; font-size: 0.85rem; }
 
@@ -92,6 +109,7 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; }
 #wheel .numeral { fill: var(--clock-ink); font-size: 13px; }
 #wheel .numeral.noon { fill: var(--accent); font-weight: 700; }
 #wheel .noon-pointer { fill: var(--accent); }
+#wheel .half-label { fill: var(--muted); font-size: 11px; letter-spacing: 0.08em; }
 #wheel .hub { fill: var(--clock-ink); }
 
 #wheel .markers { pointer-events: none; }
