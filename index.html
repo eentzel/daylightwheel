@@ -11,7 +11,13 @@
   <main>
     <header>
       <h1>Daylight Wheel</h1>
-      <p class="location">Location: <span id="location"></span></p>
+      <div class="location">
+        <label for="zip">ZIP</label>
+        <input id="zip" type="text" inputmode="numeric" maxlength="5"
+          autocomplete="postal-code" spellcheck="false">
+        <span id="place"></span>
+        <span id="zip-status" class="zip-status" role="status"></span>
+      </div>
       <button id="hour-format" class="corner-toggle" type="button"
         aria-label="Switch between 12-hour and 24-hour time">
         <span class="h12">12h</span> / <span class="h24">24h</span>
@@ -48,6 +54,11 @@
         <dt>Solar noon</dt><dd id="noon-drift"></dd>
       </dl>
     </section>
+
+    <footer>
+      ZIP code data © <a href="https://www.geonames.org/">GeoNames</a>,
+      <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+    </footer>
   </main>
 </body>
 </html>

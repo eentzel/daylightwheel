@@ -66,14 +66,15 @@ function solarNoonMin(dayMs, lon) {
 }
 
 // UTC minutes when the sun crosses `zenith` (degrees); dir -1 = morning, +1 = evening.
-// Returns null if it never does (polar day/night).
+// If it never does, returns 'day' (sun stays above) or 'night' (stays below).
 function crossingMin(dayMs, lat, lon, zenith, dir) {
   let t = solarNoonMin(dayMs, lon) + dir * 360;
   for (let i = 0; i < 3; i++) {
     const { eqTime, decl } = sunParams(dayMs + t * 60000);
     const cosH = Math.cos(zenith * RAD) / (Math.cos(lat * RAD) * Math.cos(decl)) -
       Math.tan(lat * RAD) * Math.tan(decl);
-    if (cosH < -1 || cosH > 1) return null;
+    if (cosH < -1) return 'day';
+    if (cosH > 1) return 'night';
     const ha = Math.acos(cosH) * DEG;
     t = 720 - 4 * (lon - dir * ha) - eqTime;
   }
@@ -81,10 +82,11 @@ function crossingMin(dayMs, lat, lon, zenith, dir) {
 }
 
 // Event instants for the UTC calendar day starting at `dayStart` (a Date at 00:00 UTC).
-// lon is degrees east (negative for the Americas).
+// lon is degrees east (negative for the Americas). Events that don't happen
+// (polar day/night) are null.
 export function solarEvents(dayStart, lat, lon) {
   const dayMs = dayStart.getTime();
-  const at = (min) => (min == null ? null : new Date(dayMs + min * 60000));
+  const at = (min) => (typeof min === 'number' ? new Date(dayMs + min * 60000) : null);
   return {
     dawn: at(crossingMin(dayMs, lat, lon, ZENITH.civil, -1)),
     sunrise: at(crossingMin(dayMs, lat, lon, ZENITH.sunrise, -1)),
@@ -92,4 +94,15 @@ export function solarEvents(dayStart, lat, lon) {
     sunset: at(crossingMin(dayMs, lat, lon, ZENITH.sunrise, 1)),
     dusk: at(crossingMin(dayMs, lat, lon, ZENITH.civil, 1)),
   };
+}
+
+// For days without sunrise/sunset (or dawn/dusk): whether the sun stays above
+// ('day') or below ('night') that threshold all day; null when it crosses.
+export function polarConditions(dayStart, lat, lon) {
+  const dayMs = dayStart.getTime();
+  const state = (zenith) => {
+    const v = crossingMin(dayMs, lat, lon, zenith, -1);
+    return typeof v === 'number' ? null : v;
+  };
+  return { sun: state(ZENITH.sunrise), civil: state(ZENITH.civil) };
 }

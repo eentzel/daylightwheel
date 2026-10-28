@@ -1,17 +1,15 @@
-import { solarEvents, dayOfYearToDate, dayOfYear, daysInYear, minutesUTC } from './solar.js';
+import { solarEvents, polarConditions, dayOfYearToDate, dayOfYear, daysInYear, minutesUTC } from './solar.js';
 import { createWheel } from './wheel.js';
+import { lookupZip, tzRefs } from './location.js';
 
-// Hardcoded until the ZIP picker exists.
-const LOCATION = {
+// Shown until the user picks a ZIP; matches its row in data/zips.txt.
+const DEFAULT_LOCATION = {
   zip: '80005',
-  name: 'Arvada, CO',
-  lat: 39.85,
+  place: 'Arvada',
+  state: 'CO',
+  lat: 39.84,
   lon: -105.11,
   timeZone: 'America/Denver',
-  refs: [
-    { label: 'MST', name: 'Standard time', offset: -420 },
-    { label: 'MDT', name: 'Daylight Saving time', offset: -360 },
-  ],
 };
 
 const EVENTS = [
@@ -31,20 +29,35 @@ function solarNoonOffset({ loc, year, doy }) {
   return Math.round(720 - minutesUTC(noon, dayStart));
 }
 
+const withRefs = (loc) => ({ ...loc, refs: tzRefs(loc.timeZone, year) });
+
+// Preferences are remembered per browser when storage is available.
+const HOUR12_KEY = 'daylight.hour12';
+const ZIP_KEY = 'daylight.zip';
+
+function readPref(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writePref(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage unavailable (private mode etc.); the choice just won't persist.
+  }
+}
+
 const state = {
-  loc: LOCATION,
+  loc: withRefs(DEFAULT_LOCATION),
   year,
   doy: Math.min(dayOfYear(new Date()), daysInYear(year)),
+  hour12: readPref(HOUR12_KEY) !== 'false', // 12-hour (AM/PM) is the default
 };
 state.offset = solarNoonOffset(state);
-
-// 12-hour (AM/PM) is the default; the choice is remembered per browser.
-const HOUR12_KEY = 'daylight.hour12';
-try {
-  state.hour12 = localStorage.getItem(HOUR12_KEY) !== 'false';
-} catch {
-  state.hour12 = true;
-}
 
 const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, '0');
@@ -97,10 +110,12 @@ function update() {
   const events = solarEvents(dayStart, loc.lat, loc.lon);
   const minutes = Object.fromEntries(Object.entries(events)
     .map(([k, d]) => [k, d && minutesUTC(d, dayStart)]));
+  const polar = polarConditions(dayStart, loc.lat, loc.lon);
 
   wheel.render({
     T0: minutes.solarNoon,
     events: minutes,
+    polar,
     offset,
     refs: loc.refs,
     offsetText: offsetText(offset, loc.refs),
@@ -126,7 +141,8 @@ function update() {
   }));
 
   const dayLength = minutes.sunrise != null && minutes.sunset != null
-    ? fmtDuration(minutes.sunset - minutes.sunrise) : '—';
+    ? fmtDuration(minutes.sunset - minutes.sunrise)
+    : { day: '24h 00m (sun never sets)', night: '0h 00m (sun never rises)' }[polar.sun] ?? '—';
   const noonDrift = Math.round(minutes.solarNoon + offset - 720);
   $('day-length').textContent = dayLength;
   $('noon-drift').textContent = noonDrift === 0 ? 'at clock noon'
@@ -150,29 +166,79 @@ function initSlider() {
   });
 }
 
-$('location').textContent = `${state.loc.name} (${state.loc.zip})`;
+function renderRefButtons() {
+  for (const old of document.querySelectorAll('.ref-button')) old.remove();
+  $('reset').after(...state.loc.refs.map((ref) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ref-button';
+    button.textContent = `Snap to ${ref.name} (${ref.label})`;
+    button.addEventListener('click', () => {
+      state.offset = ref.offset;
+      update();
+    });
+    return button;
+  }));
+}
+
+// A new location gets its own time zone references, and the clock is
+// realigned to its solar noon.
+function setLocation(loc) {
+  state.loc = withRefs(loc);
+  state.offset = solarNoonOffset(state);
+  $('zip').value = loc.zip;
+  $('place').textContent = `${loc.place}, ${loc.state}`;
+  renderRefButtons();
+  update();
+}
+
+let lookupSeq = 0;
+
+async function lookupAndSet(zip) {
+  const seq = ++lookupSeq;
+  const status = $('zip-status');
+  status.textContent = 'Loading…';
+  try {
+    const loc = await lookupZip(zip);
+    if (seq !== lookupSeq) return; // a newer lookup superseded this one
+    if (!loc) {
+      status.textContent = 'ZIP not found';
+      return;
+    }
+    status.textContent = '';
+    writePref(ZIP_KEY, zip);
+    setLocation(loc);
+  } catch {
+    if (seq === lookupSeq) status.textContent = "Couldn't load ZIP data";
+  }
+}
+
+function initZipInput() {
+  const input = $('zip');
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, '').slice(0, 5);
+    if (input.value.length === 5 && input.value !== state.loc.zip) lookupAndSet(input.value);
+    else $('zip-status').textContent = '';
+  });
+  input.addEventListener('keydown', (evt) => {
+    if (evt.key !== 'Enter') return;
+    if (input.value.length === 5) lookupAndSet(input.value);
+    else $('zip-status').textContent = 'Enter a 5-digit ZIP';
+  });
+}
+
 $('reset').addEventListener('click', () => {
   state.offset = solarNoonOffset(state);
   update();
 });
-$('reset').after(...state.loc.refs.map((ref) => {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.textContent = `Snap to ${ref.name} (${ref.label})`;
-  button.addEventListener('click', () => {
-    state.offset = ref.offset;
-    update();
-  });
-  return button;
-}));
 $('hour-format').addEventListener('click', () => {
   state.hour12 = !state.hour12;
-  try {
-    localStorage.setItem(HOUR12_KEY, state.hour12);
-  } catch {
-    // Storage unavailable (private mode etc.); the choice just won't persist.
-  }
+  writePref(HOUR12_KEY, state.hour12);
   update();
 });
 initSlider();
-update();
+initZipInput();
+setLocation(DEFAULT_LOCATION);
+
+const savedZip = readPref(ZIP_KEY);
+if (savedZip && savedZip !== DEFAULT_LOCATION.zip) lookupAndSet(savedZip);

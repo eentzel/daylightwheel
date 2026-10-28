@@ -2,18 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Solar tests</title>
+  <title>Daylight tests</title>
 </head>
 <body>
   <pre id="out">running…</pre>
   <script type="module">
-    import { run } from './solar.test.mjs';
-    const results = run();
-    const failed = results.filter((r) => !r.pass);
-    document.getElementById('out').textContent =
-      results.map((r) => `${r.pass ? 'PASS' : 'FAIL'} ${r.name}: ${r.detail}`).join('\n') +
-      `\n\n${results.length - failed.length}/${results.length} passed` +
-      (failed.length ? '\nRESULT: FAIL' : '\nRESULT: OK');
+    const MODULES = ['./solar.test.mjs', './location.test.mjs'];
+    const lines = [];
+    let total = 0;
+    let failed = 0;
+    for (const path of MODULES) {
+      lines.push(`# ${path}`);
+      try {
+        const { run } = await import(path);
+        for (const r of await run()) {
+          total++;
+          if (!r.pass) failed++;
+          lines.push(`${r.pass ? 'PASS' : 'FAIL'} ${r.name}: ${r.detail}`);
+        }
+      } catch (err) {
+        total++;
+        failed++;
+        lines.push(`FAIL ${path} threw: ${err}`);
+      }
+    }
+    document.getElementById('out').textContent = lines.join('\n') +
+      `\n\n${total - failed}/${total} passed` +
+      (failed ? '\nRESULT: FAIL' : '\nRESULT: OK');
   </script>
 </body>
 </html>

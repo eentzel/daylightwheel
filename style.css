@@ -83,6 +83,35 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; }
 .corner-toggle[data-mode="12"] .h12,
 .corner-toggle[data-mode="24"] .h24 { color: var(--fg); font-weight: 600; }
 .location, .hint { color: var(--muted); margin: 0; }
+
+.location {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.location input {
+  width: 5.5ch;
+  box-sizing: content-box;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--fg);
+}
+.location input:focus-visible { outline: 2px solid var(--ref); outline-offset: 1px; }
+#place { color: var(--fg); }
+.zip-status { color: var(--accent); font-size: 0.85rem; }
+
+footer {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 4px 0 8px;
+}
+footer a { color: inherit; }
 .hint { text-align: center; font-size: 0.85rem; }
 
 .wheel-wrap { margin: 8px 0 16px; }

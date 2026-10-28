@@ -40,6 +40,12 @@ function polar(r, deg) {
 }
 
 // Clockwise annulus segment from angle a1 to a2 (degrees).
+// Full annulus; the inner circle winds the other way to leave a hole.
+function ringPath(r1, r2) {
+  return `M0 ${-r2} A${r2} ${r2} 0 1 1 0 ${r2} A${r2} ${r2} 0 1 1 0 ${-r2} Z ` +
+    `M0 ${-r1} A${r1} ${r1} 0 1 0 0 ${r1} A${r1} ${r1} 0 1 0 0 ${-r1} Z`;
+}
+
 function annulusPath(r1, r2, a1, a2) {
   const span = ((a2 - a1) % 360 + 360) % 360;
   const large = span > 180 ? 1 : 0;
@@ -129,13 +135,18 @@ export function createWheel(svg, { onOffsetChange }) {
   function render(next) {
     model = next;
     const { events, offset, refs } = model;
+    const allDay = model.polar; // polar day/night conditions
 
-    const hasDay = events.sunrise != null && events.sunset != null;
-    const hasTwilight = events.dawn != null && events.dusk != null;
-    dayArc.setAttribute('d', hasDay
-      ? annulusPath(R.ringInner, R.ringOuter, toAngle(events.sunrise), toAngle(events.sunset)) : '');
-    twilightArc.setAttribute('d', hasTwilight
-      ? annulusPath(R.ringInner, R.ringOuter, toAngle(events.dawn), toAngle(events.dusk)) : '');
+    // An arc between the two events, or the whole ring if the sun stays
+    // above the threshold all day (polar day), or nothing (polar night).
+    const arc = (start, end, condition) => {
+      if (start != null && end != null) {
+        return annulusPath(R.ringInner, R.ringOuter, toAngle(start), toAngle(end));
+      }
+      return condition === 'day' ? ringPath(R.ringInner, R.ringOuter) : '';
+    };
+    dayArc.setAttribute('d', arc(events.sunrise, events.sunset, allDay.sun));
+    twilightArc.setAttribute('d', arc(events.dawn, events.dusk, allDay.civil));
 
     for (const m of markerEls) {
       const t = events[m.key];
